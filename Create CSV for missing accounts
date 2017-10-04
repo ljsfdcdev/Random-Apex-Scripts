@@ -1,0 +1,25 @@
+Map<Id, String> companyNames = New Map<id, String>();
+List<Account> unmatchedAccounts = new List<Account>();
+String csvFormat = 'Id,Name\n';
+
+For (Lead l : [Select Id, Company FROM Lead]) {
+    companyNames.put(l.Id, l.Company);
+}
+
+for (Account a : [
+            SELECT Id, Name 
+            FROM Account 
+            WHERE Name 
+            Not In :companyNames.values()
+        ]) {
+            csvFormat += a.Id + ',' + a.Name.escapeCsv() + '\n';
+            unmatchedAccounts.add(a);
+        }
+
+ContentVersion fileToInsert = new ContentVersion(
+	title = 'accounts.csv',
+    versionData = Blob.valueOf(csvFormat),
+    pathOnClient = '/accounts.csv'
+);
+
+insert fileToInsert;
